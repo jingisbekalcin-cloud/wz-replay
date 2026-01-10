@@ -3,41 +3,57 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>王者荣耀 S40 · 教练复盘板</title>
+<title>王者荣耀 S40｜教练复盘板</title>
 
 <style>
 body {
   margin: 0;
-  background: #020617;
+  background: #0b1320;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
 }
+
 header {
   text-align: center;
   padding: 10px;
   font-weight: bold;
   background: #020617;
 }
+
 .tools {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: center;
-  gap: 10px;
   padding: 10px;
+  background: #020617;
 }
+
 button {
   padding: 6px 12px;
-  font-size: 16px;
   border-radius: 6px;
   border: none;
+  font-size: 14px;
+  background: #1e293b;
+  color: #fff;
 }
+
 #board {
   position: relative;
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
 }
+
 #board img {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
+
 .mark {
   position: absolute;
   font-size: 26px;
@@ -48,19 +64,26 @@ button {
 </head>
 
 <body>
+
 <header>王者荣耀 S40 · 教练复盘板</header>
 
 <div class="tools">
-  <button onclick="addMark('❌')">❌ 错误</button>
+  <button onclick="addMark('❌')">❌ 失误</button>
   <button onclick="addMark('⭕')">⭕ 站位</button>
+  <button onclick="addMark('➡️')">➡️ 进攻</button>
+  <button onclick="addMark('⬅️')">⬅️ 撤退</button>
+  <button onclick="addMark('🐲')">🐲 龙</button>
+  <button onclick="addMark('⭐')">⭐ 关键点</button>
+  <button onclick="clearMarks()">🧹 清空</button>
 </div>
 
 <div id="board">
-  <!-- S40 地图 -->
-  <img src="./s40-map.jpg" alt="王者荣耀 S40 地图" />
+  <img src="./s40-map.jpg" alt="王者荣耀 S40 地图">
 </div>
 
 <script>
+function addMark(text) {
+  const board = document.getElementById("board");
   const m = document.createElement("div");
   m.className = "mark";
   m.innerText = text;
@@ -77,12 +100,16 @@ button {
 
   m.addEventListener("touchmove", e => {
     const t = e.touches[0];
-    m.style.left = t.clientX - offsetX + "px";
-    m.style.top = t.clientY - offsetY + "px";
+    m.style.left = (t.clientX - offsetX) + "px";
+    m.style.top = (t.clientY - offsetY) + "px";
     e.preventDefault();
   });
 
-  document.getElementById("board").appendChild(m);
+  board.appendChild(m);
+}
+
+function clearMarks() {
+  document.querySelectorAll(".mark").forEach(m => m.remove());
 }
 </script>
 
