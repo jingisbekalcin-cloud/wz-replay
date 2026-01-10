@@ -9,18 +9,17 @@
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; touch-action: none; overflow: hidden; }
         header { text-align: center; padding: 10px; font-weight: bold; background: #020617; border-bottom: 1px solid #333; }
         
-        /* 战术工具栏 */
         .tools { display: flex; gap: 8px; justify-content: center; padding: 10px; background: #020617; }
         .btn { background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
         .btn-active { background: var(--primary); color: #000; font-weight: bold; }
 
-        /* 地图：读取仓库里的 map.jpg */
         #board {
             position: relative; width: 95vw; height: 53.4vw; 
             max-width: 800px; max-height: 450px;
             margin: 10px auto;
             background: #1c2a43 url('map.jpg') no-repeat;
             background-size: 100% 100%; border: 1px solid #444;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         .hero {
@@ -28,31 +27,30 @@
             border-radius: 50%; border: 2px solid #fff;
             z-index: 100; background-size: cover; background-color: #333;
             display: flex; align-items: center; justify-content: center; font-size: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); font-weight: bold;
         }
 
-        /* 底部英雄分类区域 */
         .hero-section {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: #1a1a1a; border-top: 2px solid #333;
             display: flex; flex-direction: column; height: 130px;
         }
-        .tabs { display: flex; overflow-x: auto; background: #000; padding: 8px; gap: 10px; scrollbar-width: none; }
+        .tabs { display: flex; overflow-x: auto; background: #000; padding: 8px; gap: 10px; -webkit-overflow-scrolling: touch; }
         .tab { padding: 4px 12px; font-size: 13px; border-radius: 4px; white-space: nowrap; background: #333; color: #ccc; }
         .tab-active { background: var(--primary); color: #000; font-weight: bold; }
         
         .hero-list { display: flex; overflow-x: auto; gap: 12px; padding: 10px; align-items: center; flex: 1; }
-        .hero-item { width: 55px; height: 55px; border-radius: 50%; border: 1px solid #444; flex-shrink: 0; object-fit: cover; }
+        .hero-item { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #444; flex-shrink: 0; object-fit: cover; }
     </style>
 </head>
 <body>
 
-<header>王者复盘 | 全英雄分类版</header>
+<header>王者复盘工具 S40 严谨版</header>
 
 <div class="tools">
     <button class="btn btn-active" id="dragBtn" onclick="setMode('drag')">🖐️ 拖动</button>
     <button class="btn" id="drawBtn" onclick="setMode('draw')">✏️ 画笔</button>
-    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">🗑️ 重置</button>
+    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">🗑️ 清空</button>
 </div>
 
 <div id="board">
@@ -78,13 +76,14 @@
     const ctx = canvas.getContext('2d');
     let mode = 'drag';
 
-    // 基于你提供的名单严谨分类
+    // 严谨整合名单
     const heroes = [
         // 坦克
         { name: "廉颇", role: "坦克" }, { name: "牛魔", role: "坦克" }, { name: "张飞", role: "坦克" }, 
         { name: "白起", role: "坦克" }, { name: "项羽", role: "坦克" }, { name: "刘邦", role: "坦克" }, 
         { name: "东皇太一", role: "坦克" }, { name: "苏烈", role: "坦克" }, { name: "猪八戒", role: "坦克" }, 
         { name: "蒙恬", role: "坦克" }, { name: "盾山", role: "坦克" }, { name: "阿古朵", role: "坦克" },
+        { name: "元流之子（坦克）", role: "坦克" },
         // 战士
         { name: "亚瑟", role: "战士" }, { name: "曹操", role: "战士" }, { name: "典韦", role: "战士" }, 
         { name: "铠", role: "战士" }, { name: "狂铁", role: "战士" }, { name: "孙策", role: "战士" }, 
@@ -93,6 +92,7 @@
         { name: "钟无艳", role: "战士" }, { name: "刘备", role: "战士" }, { name: "盘古", role: "战士" }, 
         { name: "曜", role: "战士" }, { name: "姬小满", role: "战士" }, { name: "司空震", role: "战士" }, 
         { name: "云缨", role: "战士" }, { name: "影", role: "战士" }, { name: "大禹", role: "战士" },
+        { name: "元流之子（战士）", role: "战士" },
         // 打野
         { name: "阿轲", role: "打野" }, { name: "李白", role: "打野" }, { name: "韩信", role: "打野" }, 
         { name: "兰陵王", role: "打野" }, { name: "娜可露露", role: "打野" }, { name: "橘右京", role: "打野" }, 
@@ -107,19 +107,22 @@
         { name: "姜子牙", role: "法师" }, { name: "沈梦溪", role: "法师" }, { name: "米莱狄", role: "法师" }, 
         { name: "西施", role: "法师" }, { name: "上官婉儿", role: "法师" }, { name: "弈星", role: "法师" }, 
         { name: "金蝉", role: "法师" }, { name: "海月", role: "法师" }, { name: "嫦娥", role: "法师" }, 
-        { name: "武则天", role: "法师" }, { name: "海诺", role: "法师" },
+        { name: "武则天", role: "法师" }, { name: "海诺", role: "法师" }, { name: "不知火舞", role: "法师" },
+        { name: "元流之子（法师）", role: "法师" },
         // 射手
         { name: "后羿", role: "射手" }, { name: "鲁班七号", role: "射手" }, { name: "狄仁杰", role: "射手" }, 
         { name: "孙尚香", role: "射手" }, { name: "马可波罗", role: "射手" }, { name: "虞姬", role: "射手" }, 
         { name: "李元芳", role: "射手" }, { name: "百里守约", role: "射手" }, { name: "公孙离", role: "射手" }, 
         { name: "黄忠", role: "射手" }, { name: "蒙犽", role: "射手" }, { name: "艾琳", role: "射手" }, 
         { name: "戈娅", role: "射手" }, { name: "莱西奥", role: "射手" }, { name: "敖隐", role: "射手" },
+        { name: "元流之子（射手）", role: "射手" },
         // 辅助
         { name: "蔡文姬", role: "辅助" }, { name: "孙膑", role: "辅助" }, { name: "庄周", role: "辅助" }, 
         { name: "大乔", role: "辅助" }, { name: "明世隐", role: "辅助" }, { name: "太乙真人", role: "辅助" }, 
         { name: "鬼谷子", role: "辅助" }, { name: "鲁班大师", role: "辅助" }, { name: "瑶", role: "辅助" }, 
         { name: "桑启", role: "辅助" }, { name: "刘禅", role: "辅助" }, { name: "钟馗", role: "辅助" },
-        { name: "朵莉亚", role: "辅助" }, { name: "少司缘", role: "辅助" }, { name: "大司命", role: "辅助" }
+        { name: "朵莉亚", role: "辅助" }, { name: "少司缘", role: "辅助" }, { name: "大司命", role: "辅助" },
+        { name: "元流之子（辅助）", role: "辅助" }
     ];
 
     function init() {
@@ -135,7 +138,7 @@
         list.innerHTML = '';
         document.querySelectorAll('.tab').forEach(t => t.className = t.innerText === role ? 'tab tab-active' : 'tab');
 
-        const filtered = role === '全部' ? heroes : heroes.filter(h => h.role === role);
+        const filtered = role === '全部' ? heroes : heroes.filter(h => h.role.includes(role));
         filtered.forEach(h => {
             const img = document.createElement('img');
             img.src = h.name + '.jpg'; 
@@ -146,7 +149,7 @@
                 div.className = 'hero-item';
                 div.style.background = '#333'; div.style.display = 'flex';
                 div.style.alignItems = 'center'; div.style.justifyContent = 'center';
-                div.style.fontSize = '10px'; div.innerText = h.name;
+                div.style.fontSize = '9px'; div.innerText = h.name; div.style.textAlign = 'center';
                 div.onclick = () => addHero('', h.name);
                 list.appendChild(div);
                 img.remove();
@@ -165,7 +168,7 @@
         
         let move = false;
         div.onmousedown = div.ontouchstart = (e) => { 
-            if(mode==='drag') { move=true; div.style.zIndex=2000; if(e.touches) e.preventDefault(); }
+            if(mode==='drag') { move=true; div.style.zIndex=2000; }
         };
         window.onmousemove = window.ontouchmove = (e) => {
             if(!move) return;
