@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>王者荣耀 S40 教练复盘板</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    }
+    header {
+      background: #020617;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .tools {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+      background: #020617;
+    }
+    button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    .board {
+      position: relative;
+    }
+    .board img {
+      width: 100%;
+      display: block;
+    }
+    .mark {
+      position: absolute;
+      font-size: 26px;
+      cursor: move;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>王者荣耀 S40 · 教练复盘板</header>
+
+<div class="tools">
+  <button onclick="addMark('❌')">❌ 错误</button>
+  <button onclick="addMark('⭕')">⭕ 站位</button>
+</div>
+
+<div class="board" id="board">
+  <!-- 临时占位图，下一步我会换成真正的 S40 地图 -->
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Placeholder_view_vector.svg">
+</div>
+
+<script>
+function addMark(text) {
+  const m = document.createElement('div');
+  m.className = 'mark';
+  m.innerText = text;
+  m.style.left = '45%';
+  m.style.top = '45%';
+  m.onmousedown = function() {
+    document.onmousemove = e => {
+      m.style.left = e.pageX - 15 + 'px';
+      m.style.top = e.pageY - 15 + 'px';
+    };
+    document.onmouseup = () => document.onmousemove = null;
+  };
+  document.getElementById('board').appendChild(m);
+}
+</script>
+
+</body>
+</html>
