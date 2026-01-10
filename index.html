@@ -3,66 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>王者复盘-稳定修复版</title>
+    <title>王者复盘-乱序兼容版</title>
     <style>
         :root { --primary: #fbda30; --bg: #0b1320; }
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; touch-action: none; overflow: hidden; }
         header { text-align: center; padding: 10px; font-weight: bold; background: #020617; border-bottom: 1px solid #333; }
-        
-        /* 地图显示区域 */
+        .tools { display: flex; gap: 8px; justify-content: center; padding: 10px; background: #020617; }
+        .btn { background: #1e293b; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 14px; }
+        .btn-active { background: var(--primary); color: #000; font-weight: bold; }
+
         #board {
             position: relative; width: 95vw; height: 53.4vw; 
             max-width: 800px; max-height: 450px;
             margin: 10px auto;
-            /* 使用了另一个更稳定的公开地图链接 */
-            background: #1c2a43 url('https://p.sda1.dev/21/28328734208a7350c33d779f648d88e7/map.jpg') no-repeat;
+            background: #1c2a43 url('map.jpg') no-repeat; /* 只要地图叫 map.jpg 就能加载 */
             background-size: 100% 100%; border: 1px solid #444;
         }
 
         .hero {
-            position: absolute; width: 40px; height: 40px;
+            position: absolute; width: 44px; height: 44px;
             border-radius: 50%; border: 2px solid #fff;
-            z-index: 100; background-size: cover; 
-            background-color: #34495e; display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: white; font-weight: bold; text-align: center;
+            z-index: 100; background-size: cover; background-color: #333;
         }
-
-        .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; background: #020617; }
-        .btn { background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
-        .btn-active { background: var(--primary); color: #000; font-weight: bold; }
 
         .hero-bank {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: #1a1a1a; padding: 10px;
-            display: flex; overflow-x: auto; gap: 10px;
+            display: flex; overflow-x: auto; gap: 12px;
             border-top: 2px solid #333; height: 75px; align-items: center;
         }
-        .hero-btn { 
-            width: 50px; height: 50px; border-radius: 50%; 
-            background: #2c3e50; border: 1px solid #fbda30; color: #fbda30;
-            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-            font-size: 12px; cursor: pointer;
+        .hero-item { 
+            width: 55px; height: 55px; border-radius: 50%; 
+            border: 2px solid #444; flex-shrink: 0; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<header>王者荣耀复盘工具 (稳定版)</header>
+<header>王者复盘工具 (图片自动匹配版)</header>
 
 <div class="tools">
     <button class="btn btn-active" id="dragBtn" onclick="setMode('drag')">🖐️ 拖动</button>
     <button class="btn" id="drawBtn" onclick="setMode('draw')">✏️ 画笔</button>
-    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">🧹 重置</button>
+    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">清空</button>
 </div>
 
 <div id="board">
     <canvas id="paint-canvas" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
 </div>
 
-<div style="text-align:center; font-size:11px; color:#555; margin-bottom:80px;">点击下方文字添加英雄，如头像加载不出请直接拖动文字块</div>
-
-<div class="hero-bank" id="hero-bank">
-    </div>
+<div class="hero-bank" id="hero-bank"></div>
 
 <script>
     const board = document.getElementById('board');
@@ -70,62 +60,47 @@
     const ctx = canvas.getContext('2d');
     let mode = 'drag';
 
-    // 常用英雄名单
-    const heroData = [
-        {id:106, name:"小乔"}, {id:111, name:"孙尚香"}, {id:112, name:"鲁班"}, 
-        {id:117, name:"钟馗"}, {id:124, name:"周瑜"}, {id:131, name:"李白"}, 
-        {id:140, name:"关羽"}, {id:150, name:"韩信"}, {id:157, name:"不知火舞"},
-        {id:167, name:"东皇"}, {id:191, name:"大乔"}, {id:196, name:"守约"}
-    ];
-
     function init() {
         canvas.width = board.clientWidth;
         canvas.height = board.clientHeight;
         ctx.strokeStyle = '#fbda30';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
 
         const bank = document.getElementById('hero-bank');
-        heroData.forEach(h => {
-            const btn = document.createElement('div');
-            btn.className = 'hero-btn';
-            btn.innerText = h.name;
-            btn.onclick = () => addHero(h.id, h.name);
-            bank.appendChild(btn);
-        });
+        
+        // 智能扫描逻辑：自动尝试加载 100 到 600 之间的 ID
+        for (let i = 100; i <= 600; i++) {
+            const img = new Image();
+            const fileName = i + '.jpg';
+            img.src = fileName;
+            img.className = 'hero-item';
+            
+            // 只有当图片真实存在于你的 GitHub 文件夹时，才显示出来
+            img.onload = function() {
+                img.onclick = () => addHero(fileName);
+                bank.appendChild(img);
+            };
+            // 找不到的图片会自动忽略，不报错
+        }
     }
 
-    function addHero(id, name) {
+    function addHero(src) {
         const div = document.createElement('div');
         div.className = 'hero';
-        div.innerText = name; // 即使图片加载不出，也会显示名字
-        div.style.left = '45%';
-        div.style.top = '40%';
-        
-        // 尝试加载头像
-        const imgUrl = `https://game.gtimg.cn/images/yxzj/img201605/heroimg/${id}/${id}.jpg`;
-        const tempImg = new Image();
-        tempImg.src = imgUrl;
-        tempImg.onload = () => {
-            div.style.backgroundImage = `url('${imgUrl}')`;
-            div.innerText = ""; // 图片加载成功后隐藏文字
-        };
-
+        div.style.left = '45%'; div.style.top = '40%';
+        div.style.backgroundImage = `url('${src}')`;
         board.appendChild(div);
-        makeDraggable(div);
-    }
-
-    function makeDraggable(el) {
-        let isMove = false;
-        const moveHandler = (e) => {
-            if(!isMove) return;
+        
+        let move = false;
+        div.onmousedown = div.ontouchstart = () => { if(mode==='drag') move=true; };
+        window.onmousemove = window.ontouchmove = (e) => {
+            if(!move) return;
             const evt = e.touches ? e.touches[0] : e;
             const r = board.getBoundingClientRect();
-            el.style.left = (evt.clientX - r.left - 20) + 'px';
-            el.style.top = (evt.clientY - r.top - 20) + 'px';
+            div.style.left = (evt.clientX - r.left - 22) + 'px';
+            div.style.top = (evt.clientY - r.top - 22) + 'px';
         };
-        el.onmousedown = el.ontouchstart = () => { if(mode==='drag') isMove=true; };
-        window.onmousemove = window.ontouchmove = moveHandler;
-        window.onmouseup = window.ontouchend = () => isMove=false;
+        window.onmouseup = window.ontouchend = () => move = false;
     }
 
     function setMode(m) {
@@ -135,7 +110,6 @@
         canvas.style.pointerEvents = m === 'draw' ? 'auto' : 'none';
     }
 
-    // 画笔
     let drawing = false;
     board.onpointerdown = (e) => { if(mode==='draw'){ drawing=true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }};
     board.onpointermove = (e) => { if(drawing){ ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); }};
@@ -145,7 +119,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         document.querySelectorAll('.hero').forEach(h => h.remove());
     }
-
     window.onload = init;
 </script>
 </body>
