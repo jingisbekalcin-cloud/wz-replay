@@ -1,117 +1,211 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>王者荣耀 S40｜教练复盘板</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>王者战术板-专业复盘版</title>
+    <style>
+        :root { --primary: #fbda30; --bg: #0f0f0f; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; touch-action: none; overflow: hidden; }
+        
+        /* 顶部导航 */
+        .header { background: #222; padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #444; flex-wrap: wrap; }
+        .btn { background: #444; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .btn-active { background: var(--primary); color: #000; font-weight: bold; }
+        .color-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; display: inline-block; vertical-align: middle; }
 
-<style>
-body {
-  margin: 0;
-  background: #0b1320;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-}
+        /* 地图容器 */
+        #map-container {
+            position: relative;
+            width: 98vw;
+            height: 98vw;
+            max-width: 600px;
+            max-height: 600px;
+            margin: 10px auto;
+            background: url('https://game.gtimg.cn/images/yxzj/img201605/summoner/map/map_5v5.jpg') no-repeat;
+            background-size: 100% 100%;
+            border: 1px solid #666;
+            user-select: none;
+        }
 
-header {
-  text-align: center;
-  padding: 10px;
-  font-weight: bold;
-  background: #020617;
-}
+        /* 英雄样式 */
+        .hero {
+            position: absolute; width: 42px; height: 42px;
+            border-radius: 50%; border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 100;
+            background-size: cover; cursor: move;
+            transition: transform 0.1s;
+        }
+        .hero:active { transform: scale(1.2); border-color: var(--primary); }
 
-.tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  padding: 10px;
-  background: #020617;
-}
+        #paint-canvas { position: absolute; top: 0; left: 0; z-index: 50; }
 
-button {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  font-size: 14px;
-  background: #1e293b;
-  color: #fff;
-}
-
-#board {
-  position: relative;
-  width: 100vw;
-  max-width: 100vw;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: #000;
-}
-
-#board img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.mark {
-  position: absolute;
-  font-size: 26px;
-  user-select: none;
-  touch-action: none;
-}
-</style>
+        /* 底部选择器 */
+        .hero-bank {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1a1a1a; padding: 10px;
+            display: flex; overflow-x: auto; gap: 12px;
+            border-top: 1px solid #333; height: 70px;
+            align-items: center;
+        }
+        .hero-item { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #444; flex-shrink: 0; }
+        
+        .tip { font-size: 11px; color: #777; text-align: center; margin-bottom: 80px; }
+    </style>
 </head>
-
 <body>
 
-<header>王者荣耀 S40 · 教练复盘板</header>
-
-<div class="tools">
-  <button onclick="addMark('❌')">❌ 失误</button>
-  <button onclick="addMark('⭕')">⭕ 站位</button>
-  <button onclick="addMark('➡️')">➡️ 进攻</button>
-  <button onclick="addMark('⬅️')">⬅️ 撤退</button>
-  <button onclick="addMark('🐲')">🐲 龙</button>
-  <button onclick="addMark('⭐')">⭐ 关键点</button>
-  <button onclick="clearMarks()">🧹 清空</button>
+<div class="header">
+    <button id="dragBtn" class="btn btn-active" onclick="setMode('drag')">✋ 移动</button>
+    <button id="drawBtn" class="btn" onclick="setMode('draw')">✏️ 画笔</button>
+    <div style="height: 20px; width: 1px; background: #555;"></div>
+    <div onclick="setPenColor('#ff0000')" class="color-dot" style="background: #ff0000;"></div>
+    <div onclick="setPenColor('#00f2ff')" class="color-dot" style="background: #00f2ff;"></div>
+    <div onclick="setPenColor('#fbda30')" class="color-dot" style="background: #fbda30;"></div>
+    <button class="btn" onclick="undo()">↩️ 撤销</button>
+    <button class="btn" style="background: #600;" onclick="clearDraw()">🗑️ 全清</button>
 </div>
 
-<div id="board">
-  <img src="./s40-map.jpg" alt="王者荣耀 S40 地图">
+<div id="map-container">
+    <canvas id="paint-canvas"></canvas>
 </div>
+
+<div class="tip">提示：长按英雄头像可将其移除</div>
+
+<div class="hero-bank" id="hero-bank">
+    </div>
 
 <script>
-function addMark(text) {
-  const board = document.getElementById("board");
-  const m = document.createElement("div");
-  m.className = "mark";
-  m.innerText = text;
-  m.style.left = "50%";
-  m.style.top = "50%";
+    const container = document.getElementById('map-container');
+    const canvas = document.getElementById('paint-canvas');
+    const ctx = canvas.getContext('2d');
+    let mode = 'drag';
+    let paths = []; // 存储路径用于撤销
+    let currentPath = [];
 
-  let offsetX = 0, offsetY = 0;
+    // 1. 初始化
+    function init() {
+        const size = Math.min(window.innerWidth * 0.98, 600);
+        canvas.width = size;
+        canvas.height = size;
+        container.style.width = size + 'px';
+        container.style.height = size + 'px';
+        
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#ff0000';
 
-  m.addEventListener("touchstart", e => {
-    const t = e.touches[0];
-    offsetX = t.clientX - m.offsetLeft;
-    offsetY = t.clientY - m.offsetTop;
-  });
+        // 2. 加载英雄列表 (选取常用代表性英雄)
+        const commonIds = [106, 111, 112, 117, 121, 124, 131, 140, 150, 154, 157, 167, 169, 174, 175, 182, 186, 187, 190, 191, 193, 196, 501, 513];
+        const bank = document.getElementById('hero-bank');
+        commonIds.forEach(id => {
+            let img = document.createElement('img');
+            img.src = `https://game.gtimg.cn/images/yxzj/img201605/heroimg/${id}/${id}.jpg`;
+            img.className = 'hero-item';
+            img.onclick = () => addHero(img.src);
+            bank.appendChild(img);
+        });
+    }
 
-  m.addEventListener("touchmove", e => {
-    const t = e.touches[0];
-    m.style.left = (t.clientX - offsetX) + "px";
-    m.style.top = (t.clientY - offsetY) + "px";
-    e.preventDefault();
-  });
+    // 3. 英雄操作逻辑
+    function addHero(src) {
+        const div = document.createElement('div');
+        div.className = 'hero';
+        div.style.left = '45%';
+        div.style.top = '45%';
+        div.style.backgroundImage = `url('${src}')`;
+        container.appendChild(div);
+        bindEvents(div);
+    }
 
-  board.appendChild(m);
-}
+    function bindEvents(el) {
+        let isMoving = false;
+        let timer = null;
 
-function clearMarks() {
-  document.querySelectorAll(".mark").forEach(m => m.remove());
-}
+        const start = (e) => {
+            if(mode !== 'drag') return;
+            isMoving = true;
+            el.style.zIndex = 2000;
+            // 长按删除功能 (800毫秒)
+            timer = setTimeout(() => {
+                if(confirm('要移除这个英雄吗？')) el.remove();
+            }, 800);
+        };
+
+        const move = (e) => {
+            if(!isMoving) return;
+            clearTimeout(timer);
+            const evt = e.touches ? e.touches[0] : e;
+            const rect = container.getBoundingClientRect();
+            el.style.left = (evt.clientX - rect.left - 21) + 'px';
+            el.style.top = (evt.clientY - rect.top - 21) + 'px';
+        };
+
+        const end = () => { isMoving = false; clearTimeout(timer); };
+
+        el.addEventListener('mousedown', start);
+        el.addEventListener('touchstart', start);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move);
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchend', end);
+    }
+
+    // 4. 绘图逻辑
+    function setMode(m) {
+        mode = m;
+        document.getElementById('dragBtn').className = m === 'drag' ? 'btn btn-active' : 'btn';
+        document.getElementById('drawBtn').className = m === 'draw' ? 'btn btn-active' : 'btn';
+        canvas.style.pointerEvents = m === 'draw' ? 'auto' : 'none';
+    }
+
+    function setPenColor(c) {
+        ctx.strokeStyle = c;
+        setMode('draw');
+    }
+
+    canvas.onpointerdown = (e) => {
+        if(mode !== 'draw') return;
+        currentPath = [];
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+        currentPath.push({x: e.offsetX, y: e.offsetY, color: ctx.strokeStyle});
+    };
+
+    canvas.onpointermove = (e) => {
+        if(mode !== 'draw' || e.buttons !== 1) return;
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        currentPath.push({x: e.offsetX, y: e.offsetY});
+    };
+
+    canvas.onpointerup = () => {
+        if(currentPath.length > 0) paths.push([...currentPath]);
+    };
+
+    function undo() {
+        paths.pop();
+        redrawAll();
+    }
+
+    function redrawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        paths.forEach(path => {
+            ctx.beginPath();
+            ctx.strokeStyle = path[0].color;
+            ctx.moveTo(path[0].x, path[0].y);
+            path.forEach((pt, i) => { if(i>0) ctx.lineTo(pt.x, pt.y); });
+            ctx.stroke();
+        });
+    }
+
+    function clearDraw() {
+        paths = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    window.onload = init;
 </script>
-
 </body>
 </html>
