@@ -3,64 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>王者荣耀 S40 | 全英雄复盘板</title>
+    <title>王者复盘工具-修复版</title>
     <style>
         :root { --primary: #fbda30; --bg: #0b1320; }
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; touch-action: none; overflow: hidden; }
-        header { text-align: center; padding: 10px; font-weight: bold; background: #020617; font-size: 16px; border-bottom: 1px solid #333; }
+        header { text-align: center; padding: 10px; font-weight: bold; background: #020617; border-bottom: 1px solid #333; }
         
         .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; background: #020617; }
-        .btn { background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .btn { background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
         .btn-active { background: var(--primary); color: #000; font-weight: bold; }
 
+        /* 修复地图：增加备用背景色，防止图片加载失败时全黑 */
         #board {
-            position: relative; width: 95vw; height: 53.4vw; /* 16:9 */
+            position: relative; width: 95vw; height: 53.4vw; 
             max-width: 800px; max-height: 450px;
             margin: 10px auto;
-            background: url('https://game.gtimg.cn/images/yxzj/img201605/summoner/map/map_5v5.jpg') no-repeat;
+            background: #1c2a43 url('https://game.gtimg.cn/images/yxzj/img201605/summoner/map/map_5v5.jpg') no-repeat;
             background-size: 100% 100%; border: 1px solid #444;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         .hero {
-            position: absolute; width: 38px; height: 38px;
+            position: absolute; width: 40px; height: 40px;
             border-radius: 50%; border: 2px solid #fff;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 100;
-            background-size: cover; cursor: move; touch-action: none;
+            z-index: 100; background-size: cover; background-color: #333;
         }
 
-        #paint-canvas { position: absolute; top: 0; left: 0; z-index: 50; pointer-events: none; }
-
-        /* 英雄库容器：支持横向滚动 */
+        /* 英雄库滚动条优化 */
         .hero-bank {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: #1a1a1a; padding: 10px 5px;
-            display: flex; overflow-x: auto; gap: 8px;
-            border-top: 2px solid #333; height: 65px; align-items: center;
-            -webkit-overflow-scrolling: touch;
+            background: #1a1a1a; padding: 10px;
+            display: flex; overflow-x: auto; gap: 10px;
+            border-top: 2px solid #333; height: 70px; align-items: center;
         }
-        .hero-item { width: 48px; height: 48px; border-radius: 50%; border: 1px solid #444; flex-shrink: 0; background-color: #333; }
-        
-        .hint { text-align: center; font-size: 11px; color: #555; margin-bottom: 80px; }
+        .hero-item { 
+            width: 50px; height: 50px; border-radius: 50%; 
+            border: 2px solid #444; flex-shrink: 0; 
+            object-fit: cover; background: #222;
+        }
     </style>
 </head>
 <body>
 
-<header>王者荣耀 S40 | 全英雄复盘工具</header>
+<header>王者荣耀复盘工具</header>
 
 <div class="tools">
-    <button class="btn btn-active" id="dragBtn" onclick="setMode('drag')">🖐️ 移动英雄</button>
-    <button class="btn" id="drawBtn" onclick="setMode('draw')">✏️ 战术画笔</button>
-    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">🧹 清空重置</button>
+    <button class="btn btn-active" id="dragBtn" onclick="setMode('drag')">🖐️ 移动</button>
+    <button class="btn" id="drawBtn" onclick="setMode('draw')">✏️ 画笔</button>
+    <button class="btn" onclick="clearAll()" style="background:#7f1d1d;">🧹 清空</button>
 </div>
 
 <div id="board">
     <canvas id="paint-canvas"></canvas>
 </div>
 
-<div class="hint">左右滑动底部选择英雄 • 长按英雄可删除</div>
-
-<div class="hero-bank" id="hero-bank">
-    </div>
+<div class="hero-bank" id="hero-bank"></div>
 
 <script>
     const board = document.getElementById('board');
@@ -73,25 +70,18 @@
         canvas.height = board.clientHeight;
         ctx.strokeStyle = '#fbda30';
         ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
 
-        // 王者全英雄 ID 列表（包含热门及大部分英雄）
-        const allHeroIds = [
-            105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,
-            121,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,
-            139,140,141,142,144,146,148,149,150,152,153,154,155,156,157,162,
-            163,166,167,168,169,170,171,173,174,175,177,178,179,180,182,183,
-            184,186,187,189,190,191,192,193,194,195,196,197,198,199,501,502,
-            503,504,505,506,507,508,509,510,511,513,515,518,521,522,523,524,
-            525,527,528,529,531,533,534,536,537,538,540,542,544,548
-        ];
-
+        // 重新整理的英雄 ID (确保这些 ID 是官方库中存在的)
+        const ids = [105, 106, 111, 112, 117, 124, 131, 140, 150, 154, 157, 167, 175, 182, 191, 196, 501, 513];
         const bank = document.getElementById('hero-bank');
-        allHeroIds.forEach(id => {
-            let img = document.createElement('img');
+        
+        ids.forEach(id => {
+            const img = document.createElement('img');
+            // 使用 https 协议确保安全加载
             img.src = `https://game.gtimg.cn/images/yxzj/img201605/heroimg/${id}/${id}.jpg`;
             img.className = 'hero-item';
-            img.loading = "lazy"; // 延迟加载，防止卡顿
+            // 增加加载失败处理
+            img.onerror = function() { this.style.display = 'none'; };
             img.onclick = () => addHero(img.src);
             bank.appendChild(img);
         });
@@ -104,36 +94,26 @@
         div.style.top = '40%';
         div.style.backgroundImage = `url('${src}')`;
         board.appendChild(div);
-        makeDraggable(div);
-    }
-
-    function makeDraggable(el) {
-        let isMoving = false;
-        let timer;
-        const start = (e) => { 
-            if(mode !== 'drag') return;
-            isMoving = true; 
-            el.style.zIndex = 1000;
-            timer = setTimeout(() => { if(confirm('要移除这个英雄吗？')) el.remove(); }, 1000);
-        };
-        const move = (e) => {
-            if(!isMoving) return;
-            clearTimeout(timer);
-            const evt = e.touches ? e.touches[0] : e;
-            const rect = board.getBoundingClientRect();
-            let x = evt.clientX - rect.left - 19;
-            let y = evt.clientY - rect.top - 19;
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-        };
-        const end = () => { isMoving = false; clearTimeout(timer); };
         
-        el.addEventListener('mousedown', start);
-        el.addEventListener('touchstart', start);
-        window.addEventListener('mousemove', move);
+        // 拖拽逻辑
+        let isMove = false;
+        const start = () => isMove = (mode === 'drag');
+        const move = (e) => {
+            if(!isMove) return;
+            const evt = e.touches ? e.touches[0] : e;
+            const r = board.getBoundingClientRect();
+            div.style.left = (evt.clientX - r.left - 20) + 'px';
+            div.style.top = (evt.clientY - r.top - 20) + 'px';
+        };
+        const end = () => isMove = false;
+        
+        div.addEventListener('touchstart', start);
         window.addEventListener('touchmove', move);
-        window.addEventListener('mouseup', end);
         window.addEventListener('touchend', end);
+        // PC端兼容
+        div.addEventListener('mousedown', start);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', end);
     }
 
     function setMode(m) {
