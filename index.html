@@ -3,52 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>王者复盘-红蓝对阵版</title>
+    <title>王者复盘-全英雄终极版</title>
     <style>
         :root { --primary: #fbda30; --bg: #0b1320; --blue: #008cff; --red: #ff3e3e; }
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; touch-action: none; overflow: hidden; }
         header { text-align: center; padding: 10px; font-weight: bold; background: #020617; border-bottom: 1px solid #333; font-size: 14px; }
-        
         .tools { display: flex; gap: 5px; justify-content: center; padding: 10px; background: #020617; flex-wrap: wrap; }
-        .btn { background: #1e293b; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
+        .btn { background: #1e293b; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
         .btn-active { background: var(--primary); color: #000; font-weight: bold; }
-
-        #board {
-            position: relative; width: 95vw; height: 53.4vw; max-width: 800px; max-height: 450px;
-            margin: 5px auto; background: #1c2a43 url('map.jpg') no-repeat;
-            background-size: 100% 100%; border: 1px solid #444; overflow: hidden;
-        }
-
-        .unit {
-            position: absolute; border-radius: 50%; z-index: 100; 
-            background-size: cover; background-position: center; background-color: #333;
-            display: flex; align-items: center; justify-content: center; font-weight: bold;
-            box-shadow: 0 0 8px rgba(0,0,0,0.6);
-        }
-        /* 英雄样式 */
+        #board { position: relative; width: 95vw; height: 53.4vw; max-width: 800px; max-height: 450px; margin: 5px auto; background: #1c2a43 url('map.jpg') no-repeat; background-size: 100% 100%; border: 1px solid #444; overflow: hidden; }
+        .unit { position: absolute; border-radius: 50%; z-index: 100; background-size: cover; background-position: center; background-color: #333; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.6); }
         .hero { width: 42px; height: 42px; border: 3px solid var(--blue); font-size: 9px; }
         .hero.red-side { border-color: var(--red); }
-        /* 兵线样式 */
         .minion { width: 26px; height: 26px; font-size: 10px; }
         .minion.blue-minion { border: 2px solid var(--blue); color: var(--blue); }
         .minion.red-minion { border: 2px solid var(--red); color: var(--red); }
-
-        .hero-section {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #1a1a1a; border-top: 2px solid #333;
-            display: flex; flex-direction: column; height: 130px;
-        }
+        .hero-section { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #333; display: flex; flex-direction: column; height: 130px; }
         .tabs { display: flex; overflow-x: auto; background: #000; padding: 8px; gap: 10px; }
-        .tab { padding: 4px 12px; font-size: 13px; border-radius: 4px; white-space: nowrap; background: #333; }
+        .tab { padding: 4px 12px; font-size: 13px; border-radius: 4px; white-space: nowrap; background: #333; cursor: pointer; }
         .tab-active { background: var(--primary); color: #000; }
         .hero-list { display: flex; overflow-x: auto; gap: 12px; padding: 10px; align-items: center; flex: 1; }
-        .hero-item { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #444; flex-shrink: 0; background-size: cover; background-position: center; }
+        .hero-item { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #444; flex-shrink: 0; background-size: cover; background-position: center; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<header>王者复盘 | 蓝红对阵·兵线·橡皮擦</header>
-
+<header>王者复盘 | 整合全英雄·红蓝兵·橡皮</header>
 <div class="tools">
     <button class="btn btn-active" id="dragBtn" onclick="setMode('drag')">🖐️ 拖动</button>
     <button class="btn" id="drawBtn" onclick="setMode('draw')">✏️ 画笔</button>
@@ -57,11 +36,7 @@
     <button class="btn" onclick="addMinion('red')" style="background:#7f1d1d;">🤖 红兵</button>
     <button class="btn" onclick="clearAll()" style="background:#334155;">🗑️ 全清</button>
 </div>
-
-<div id="board">
-    <canvas id="paint-canvas" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
-</div>
-
+<div id="board"><canvas id="paint-canvas" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas></div>
 <div class="hero-section">
     <div class="tabs" id="tabs">
         <div class="tab tab-active" onclick="filterHeroes('全部')">全部</div>
@@ -74,32 +49,22 @@
     </div>
     <div class="hero-list" id="hero-list"></div>
 </div>
-
 <script>
-    const board = document.getElementById('board');
-    const canvas = document.getElementById('paint-canvas');
-    const ctx = canvas.getContext('2d');
+    const board = document.getElementById('board'), canvas = document.getElementById('paint-canvas'), ctx = canvas.getContext('2d');
     let mode = 'drag';
-
+    
+    // 重新塞回所有英雄名单
     const heroes = [
-        { name: "大禹", role: "战士" }, { name: "影", role: "战士" }, { name: "少司缘", role: "辅助" }, { name: "大司命", role: "辅助" }, { name: "敖隐", role: "射手" }, { name: "海诺", role: "法师" }, { name: "朵莉亚", role: "辅助" }, { name: "元流之子（坦克）", role: "坦克" }, { name: "元流之子（战士）", role: "战士" }, { name: "元流之子（法师）", role: "法师" }, { name: "元流之子（射手）", role: "射手" }, { name: "元流之子（辅助）", role: "辅助" },
-        { name: "廉颇", role: "坦克" }, { name: "张飞", role: "坦克" }, { name: "铠", role: "战士" }, { name: "亚瑟", role: "战士" }, { name: "李白", role: "打野" }, { name: "韩信", role: "打野" }, { name: "妲己", role: "法师" }, { name: "安琪拉", role: "法师" }, { name: "后羿", role: "射手" }, { name: "鲁班七号", role: "射手" }, { name: "瑶", role: "辅助" }, { name: "蔡文姬", role: "辅助" }
+        { name: "大禹", role: "战士" }, { name: "影", role: "战士" }, { name: "少司缘", role: "辅助" }, { name: "空空儿", role: "打野" }, { name: "大司命", role: "辅助" }, { name: "敖隐", role: "射手" }, { name: "海诺", role: "法师" }, { name: "朵莉亚", role: "辅助" }, { name: "亚连", role: "战士" }, { name: "姬小满", role: "战士" }, { name: "莱西奥", role: "射手" }, { name: "赵怀真", role: "打野" }, { name: "海月", role: "法师" }, { name: "戈娅", role: "射手" }, { name: "桑启", role: "辅助" }, { name: "暃", role: "打野" }, { name: "金蝉", role: "法师" }, { name: "云缨", role: "战士" }, { name: "艾琳", role: "射手" }, { name: "司空震", role: "战士" }, { name: "澜", role: "打野" }, { name: "夏洛特", role: "战士" }, { name: "阿古朵", role: "坦克" }, { name: "蒙恬", role: "坦克" }, { name: "镜", role: "打野" }, { name: "蒙犽", role: "射手" }, { name: "鲁班大师", role: "辅助" }, { name: "西施", role: "法师" }, { name: "马超", role: "战士" }, { name: "曜", role: "战士" }, { name: "云中君", role: "打野" }, { name: "瑶", role: "辅助" }, { name: "盘古", role: "战士" }, { name: "猪八戒", role: "坦克" }, { name: "嫦娥", role: "法师" }, { name: "上官婉儿", role: "法师" }, { name: "李信", role: "战士" }, { name: "沈梦溪", role: "法师" }, { name: "伽罗", role: "射手" }, { name: "盾山", role: "坦克" }, { name: "司马懿", role: "打野" }, { name: "孙策", role: "战士" }, { name: "元歌", role: "打野" }, { name: "米莱狄", role: "法师" }, { name: "狂铁", role: "战士" }, { name: "弈星", role: "法师" }, { name: "裴擒虎", role: "打野" }, { name: "杨玉环", role: "法师" }, { name: "公孙离", role: "射手" }, { name: "明世隐", role: "辅助" }, { name: "女娲", role: "法师" }, { name: "梦奇", role: "战士" }, { name: "苏烈", role: "坦克" }, { name: "百里玄策", role: "打野" }, { name: "百里守约", role: "射手" }, { name: "铠", role: "战士" }, { name: "鬼谷子", role: "辅助" }, { name: "干将莫邪", role: "法师" }, { name: "东皇太一", role: "坦克" }, { name: "大乔", role: "辅助" }, { name: "黄忠", role: "射手" }, { name: "诸葛亮", role: "法师" }, { name: "哪吒", role: "战士" }, { name: "太乙真人", role: "辅助" }, { name: "杨戬", role: "战士" }, { name: "橘右京", role: "打野" }, { name: "马可波罗", role: "射手" }, { name: "雅典娜", role: "战士" }, { name: "夏侯惇", role: "坦克" }, { name: "蔡文姬", role: "辅助" }, { name: "关羽", role: "战士" }, { name: "虞姬", role: "射手" }, { name: "不知火舞", role: "法师" }, { name: "刘邦", role: "坦克" }, { name: "李元芳", role: "射手" }, { name: "钟馗", role: "辅助" }, { name: "李白", role: "打野" }, { name: "娜可露露", role: "打野" }, { name: "兰陵王", role: "打野" }, { name: "刘备", role: "战士" }, { name: "张飞", role: "坦克" }, { name: "后羿", role: "射手" }, { name: "花木兰", role: "战士" }, { name: "吕布", role: "战士" }, { name: "貂蝉", role: "法师" }, { name: "芈月", role: "法师" }, { name: "孙悟空", role: "打野" }, { name: "牛魔", role: "坦克" }, { name: "周瑜", role: "法师" }, { name: "曹操", role: "战士" }, { name: "安琪拉", role: "法师" }, { name: "王昭君", role: "法师" }, { name: "程咬金", role: "战士" }, { name: "项羽", role: "坦克" }, { name: "宫本武藏", role: "打野" }, { name: "扁鹊", role: "法师" }, { name: "刘禅", role: "辅助" }, { name: "孙尚香", role: "射手" }, { name: "亚瑟", role: "战士" }, { name: "韩信", role: "打野" }, { name: "达摩", role: "战士" }, { name: "典韦", role: "战士" }, { name: "孙膑", role: "辅助" }, { name: "庄周", role: "辅助" }, { name: "墨子", role: "法师" }, { name: "张良", role: "法师" }, { name: "狄仁杰", role: "射手" }, { name: "钟无艳", role: "战士" }, { name: "鲁班七号", role: "射手" }, { name: "小乔", role: "法师" }, { name: "姜子牙", role: "法师" }, { name: "老夫子", role: "战士" }, { name: "甄姬", role: "法师" }, { name: "阿轲", role: "打野" }, { name: "嬴政", role: "法师" }, { name: "廉颇", role: "坦克" }, { name: "露娜", role: "打野" }, { name: "武则天", role: "法师" }, { name: "白起", role: "坦克" }, { name: "高渐离", role: "法师" }, { name: "妲己", role: "法师" }, { name: "赵云", role: "打野" }, { name: "元流之子（坦克）", role: "坦克" }, { name: "元流之子（战士）", role: "战士" }, { name: "元流之子（法师）", role: "法师" }, { name: "元流之子（射手）", role: "射手" }, { name: "元流之子（辅助）", role: "辅助" }
     ];
 
-    function init() {
-        canvas.width = board.clientWidth; canvas.height = board.clientHeight;
-        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-        filterHeroes('全部');
-    }
-
+    function init() { canvas.width = board.clientWidth; canvas.height = board.clientHeight; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; filterHeroes('全部'); }
+    
     function filterHeroes(role) {
-        const list = document.getElementById('hero-list');
-        list.innerHTML = '';
+        const list = document.getElementById('hero-list'); list.innerHTML = '';
         document.querySelectorAll('.tab').forEach(t => t.className = t.innerText === role ? 'tab tab-active' : 'tab');
-        const filtered = role === '全部' ? heroes : heroes.filter(h => h.role === role);
-        filtered.forEach(h => {
-            const item = document.createElement('div');
-            item.className = 'hero-item'; item.style.backgroundImage = `url('${h.name}.jpg')`;
+        heroes.filter(h => role === '全部' || h.role === role).forEach(h => {
+            const item = document.createElement('div'); item.className = 'hero-item'; item.style.backgroundImage = `url('${h.name}.jpg')`;
             item.onclick = () => createUnit(h.name, 'hero');
             const imgCheck = new Image(); imgCheck.src = h.name + '.jpg';
             imgCheck.onerror = () => { item.innerText = h.name; item.style.fontSize = '9px'; item.style.background = '#333'; item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.justifyContent = 'center'; };
@@ -108,24 +73,15 @@
     }
 
     function createUnit(name, type, side = 'blue') {
-        const el = document.createElement('div');
-        el.className = `unit ${type}`;
-        el.style.left = (side === 'blue' ? 20 : 70) + '%'; 
-        el.style.top = (side === 'blue' ? 70 : 20) + '%';
-        
+        const el = document.createElement('div'); el.className = `unit ${type}`;
+        el.style.left = (side === 'blue' ? 20 : 70) + '%'; el.style.top = (side === 'blue' ? 70 : 20) + '%';
         if(type === 'hero') {
             el.style.backgroundImage = `url('${name}.jpg')`;
             const imgCheck = new Image(); imgCheck.src = name + '.jpg';
             imgCheck.onerror = () => el.innerText = name;
             el.addEventListener('click', (e) => { if(mode === 'drag') el.classList.toggle('red-side'); e.stopPropagation(); });
-        } else {
-            el.classList.add(side === 'blue' ? 'blue-minion' : 'red-minion');
-            el.innerText = '兵';
-        }
-
-        el.addEventListener('dblclick', () => el.remove());
-        board.appendChild(el);
-        makeDraggable(el);
+        } else { el.classList.add(side === 'blue' ? 'blue-minion' : 'red-minion'); el.innerText = '兵'; }
+        el.addEventListener('dblclick', () => el.remove()); board.appendChild(el); makeDraggable(el);
     }
 
     function addMinion(side) { createUnit('兵', 'minion', side); }
@@ -135,10 +91,8 @@
         const start = () => { if(mode==='drag') { isMoving=true; el.style.zIndex=2000; } };
         const move = (e) => {
             if(!isMoving) return;
-            const evt = e.touches ? e.touches[0] : e;
-            const r = board.getBoundingClientRect();
-            el.style.left = (evt.clientX - r.left - (el.offsetWidth/2)) + 'px';
-            el.style.top = (evt.clientY - r.top - (el.offsetHeight/2)) + 'px';
+            const evt = e.touches ? e.touches[0] : e; const r = board.getBoundingClientRect();
+            el.style.left = (evt.clientX - r.left - (el.offsetWidth/2)) + 'px'; el.style.top = (evt.clientY - r.top - (el.offsetHeight/2)) + 'px';
         };
         const stop = () => isMoving = false;
         el.addEventListener('mousedown', start); el.addEventListener('touchstart', start);
@@ -147,9 +101,8 @@
     }
 
     function setMode(m) {
-        mode = m;
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('btn-active'));
-        document.getElementById(m + 'Btn') ? document.getElementById(m + 'Btn').classList.add('btn-active') : null;
+        mode = m; document.querySelectorAll('.btn').forEach(b => b.classList.remove('btn-active'));
+        if(document.getElementById(m + 'Btn')) document.getElementById(m + 'Btn').classList.add('btn-active');
         canvas.style.pointerEvents = (m === 'draw' || m === 'erase') ? 'auto' : 'none';
     }
 
@@ -158,17 +111,12 @@
         if(mode === 'draw' || mode === 'erase'){
             drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY);
             ctx.globalCompositeOperation = mode === 'erase' ? 'destination-out' : 'source-over';
-            ctx.strokeStyle = mode === 'erase' ? 'rgba(0,0,0,1)' : '#fbda30';
-            ctx.lineWidth = mode === 'erase' ? 25 : 4;
+            ctx.strokeStyle = mode === 'erase' ? 'rgba(0,0,0,1)' : '#fbda30'; ctx.lineWidth = mode === 'erase' ? 25 : 4;
         }
     });
     board.addEventListener('pointermove', (e) => { if(drawing){ ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); }});
     board.addEventListener('pointerup', () => drawing = false);
-
-    function clearAll() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        document.querySelectorAll('.unit').forEach(u => u.remove());
-    }
+    function clearAll() { ctx.clearRect(0, 0, canvas.width, canvas.height); document.querySelectorAll('.unit').forEach(u => u.remove()); }
     window.onload = init;
 </script>
 </body>
