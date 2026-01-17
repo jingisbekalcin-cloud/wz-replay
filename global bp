@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"/>
+  <title>Global BP (AI) - 单页版</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#101a2d; --panel2:#0e1729;
+      --txt:#e8eefc; --muted:#9fb0d0;
+      --blue:#3b82f6; --red:#ef4444; --gold:#fbbf24;
+      --ok:#22c55e; --warn:#f97316;
+      --bd:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#070b14 0%,#0b1220 100%);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Noto Sans SC","Microsoft Yahei"; }
+    header{position:sticky;top:0;z-index:20;background:rgba(7,11,20,.86);backdrop-filter: blur(10px);border-bottom:1px solid var(--bd);}
+    .wrap{max-width:1200px;margin:0 auto;padding:12px 12px 18px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .title{font-weight:800;font-size:16px;letter-spacing:.3px}
+    .badge{padding:4px 8px;border:1px solid var(--bd);border-radius:999px;color:var(--muted);font-size:12px}
+    .btn{border:1px solid var(--bd);background:rgba(255,255,255,.03);color:var(--txt);padding:9px 10px;border-radius:10px;font-weight:700;font-size:13px}
+    .btn:active{transform:scale(.99)}
+    .btnBlue{border-color:rgba(59,130,246,.45);background:rgba(59,130,246,.12)}
+    .btnRed{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12)}
+    .btnGold{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.12);color:#ffe8a3}
+    .btnOk{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.12)}
+    .btnWarn{border-color:rgba(249,115,22,.55);background:rgba(249,115,22,.12)}
+    .grid{display:grid;grid-template-columns: 360px 1fr;gap:12px;margin-top:12px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;}}
+    .card{background:linear-gradient(180deg,rgba(16,26,45,.9) 0%,rgba(14,23,41,.9) 100%);border:1px solid var(--bd);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h3{margin:0;padding:12px 12px;border-bottom:1px solid var(--bd);font-size:14px;display:flex;align-items:center;justify-content:space-between}
+    .card .content{padding:12px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 10px;border:1px solid var(--bd);border-radius:999px;color:var(--muted);font-weight:800;font-size:12px}
+    .tab.on{color:var(--txt);border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.12)}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:560px){.two{grid-template-columns:1fr}}
+    .sideHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd)}
+    .sideName{font-weight:900}
+    .sideName.blue{color:#bcd7ff}
+    .sideName.red{color:#ffb7b7}
+    .laneReq{display:flex;gap:6px;flex-wrap:wrap}
+    .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--bd);font-size:12px;color:var(--muted)}
+    .pill.good{border-color:rgba(34,197,94,.55);color:#bff2d1;background:rgba(34,197,94,.10)}
+    .pill.bad{border-color:rgba(239,68,68,.55);color:#ffd0d0;background:rgba(239,68,68,.10)}
+    .slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .slotBlock{background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.14);border-radius:14px;padding:10px;min-height:94px}
+    .slotBlock strong{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{padding:6px 8px;border-radius:10px;border:1px solid var(--bd);background:rgba(255,255,255,.03);font-size:12px;font-weight:800;display:flex;align-items:center;gap:8px}
+    .chip .x{opacity:.7;font-weight:900}
+    .chip.blue{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.10)}
+    .chip.red{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.10)}
+    .chip.ban{border-color:rgba(249,115,22,.55);background:rgba(249,115,22,.10)}
+    .heroGrid{display:grid;grid-template-columns: repeat(4, minmax(0, 1fr));gap:8px}
+    @media(max-width:980px){.heroGrid{grid-template-columns: repeat(3, minmax(0,1fr));}}
+    @media(max-width:420px){.heroGrid{grid-template-columns: repeat(2, minmax(0,1fr));}}
+    .hero{border:1px solid var(--bd);background:rgba(255,255,255,.02);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:84px}
+    .heroTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .heroName{font-weight:900;font-size:13px}
+    .heroMeta{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:11px;padding:3px 7px;border-radius:999px;border:1px solid var(--bd);color:var(--muted)}
+    .tag.tier{border-color:rgba(251,191,36,.55);color:#ffe8a3;background:rgba(251,191,36,.10)}
+    .tag.role{border-color:rgba(148,163,184,.35)}
+    .heroBtns{display:flex;gap:6px}
+    .small{font-size:11px;padding:7px 8px;border-radius:10px}
+    .search{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.18);color:var(--txt);outline:none}
+    textarea{width:100%;min-height:140px;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.18);color:var(--txt);padding:10px;outline:none}
+    .muted{color:var(--muted);font-size:12px;line-height:1.35}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi .box{flex:1;min-width:150px;background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:14px;padding:10px}
+    .kpi .box b{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .kpi .box span{font-weight:900;font-size:16px}
+    .aiBox{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:14px;padding:10px}
+    .aiPick{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .aiPick .name{font-weight:1000;font-size:16px}
+    .aiPick .why{color:var(--muted);font-size:12px;line-height:1.35;margin-top:6px}
+    .hr{height:1px;background:var(--bd);margin:10px 0}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.18);padding:10px 12px;border-radius:12px;display:none;z-index:99}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <div class="title">Global BP（AI）</div>
+        <div class="badge" id="phaseBadge">Phase: Ban</div>
+        <div class="badge" id="turnBadge">Turn: Blue</div>
+      </div>
+      <div class="row">
+        <button class="btn btnGold" id="btnAi">AI 推荐下一手</button>
+        <button class="btn btnOk" id="btnUndo">撤销</button>
+        <button class="btn" id="btnReset">重置</button>
+        <button class="btn" id="btnExport">导出</button>
+        <button class="btn" id="btnImport">导入</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT: BP + AI -->
+    <div class="card">
+      <h3>
+        <span>BP 面板</span>
+        <span class="tabs">
+          <span class="tab on" data-mode="global">Global(5 Ban)</span>
+          <span class="tab" data-mode="fast">Fast(3 Ban)</span>
+        </span>
+      </h3>
+
+      <div class="two">
+        <div class="card" style="border-radius:16px">
+          <div class="sideHead">
+            <div class="sideName blue">Blue</div>
+            <div class="laneReq" id="blueReq"></div>
+          </div>
+          <div class="content">
+            <div class="slotBlock">
+              <strong>Blue Bans</strong>
+              <div class="chips" id="blueBans"></div>
+            </div>
+            <div style="height:10px"></div>
+            <div class="slotBlock">
+              <strong>Blue Picks</strong>
+              <div class="chips" id="bluePicks"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-radius:16px">
+          <div class="sideHead">
+            <div class="sideName red">Red</div>
+            <div class="laneReq" id="redReq"></div>
+          </div>
+          <div class="content">
+            <div class="slotBlock">
+              <strong>Red Bans</strong>
+              <div class="chips" id="redBans"></div>
+            </div>
+            <div style="height:10px"></div>
+            <div class="slotBlock">
+              <strong>Red Picks</strong>
+              <div class="chips" id="redPicks"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="kpi">
+          <div class="box"><b>蓝方阵容分</b><span id="blueScore">0</span></div>
+          <div class="box"><b>红方阵容分</b><span id="redScore">0</span></div>
+          <div class="box"><b>剩余英雄</b><span id="remainCnt">0</span></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="aiBox">
+          <div class="aiPick">
+            <div>
+              <div class="name" id="aiName">—</div>
+              <div class="why" id="aiWhy">点击「AI 推荐下一手」。</div>
+            </div>
+            <div class="row">
+              <button class="btn btnBlue small" id="btnApplyPick">一键 Pick</button>
+              <button class="btn btnRed small" id="btnApplyBan">一键 Ban</button>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:8px">
+            AI 规则：综合英雄 Tier（强度）、阵容补位（位置缺口）、与己方已选的协同（synergy）以及对敌方已选的克制（counter）。
+            你可以在“英雄池”里改英雄名/位置/Tier/标签，马上生效。
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="muted">
+          操作：在右侧英雄池里点 <b>Pick</b> / <b>Ban</b>。你也可以先用 AI 选出来再“一键应用”。
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: HERO POOL -->
+    <div class="card">
+      <h3>
+        <span>英雄池（可改成国际服）</span>
+        <span class="row" style="gap:6px">
+          <button class="btn small" id="btnEditData">编辑英雄数据</button>
+        </span>
+      </h3>
+      <div class="content">
+        <input class="search" id="search" placeholder="搜索英雄 / 标签（如: jungle, burst, engage）"/>
+        <div style="height:10px"></div>
+        <div class="heroGrid" id="heroGrid"></div>
+
+        <div class="hr"></div>
+        <div id="dataEditor" style="display:none">
+          <div class="muted" style="margin-bottom:8px">
+            这是英雄数据 JSON。你可以把“国际服英雄名”都改进去，或增删英雄。保存后立即生效。
+          </div>
+          <textarea id="dataText"></textarea>
+          <div class="row" style="margin-top:10px;justify-content:flex-end">
+            <button class="btn btnOk" id="btnSaveData">保存英雄数据</button>
+            <button class="btn" id="btnCancelData">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">已复制</div>
+
+<script>
+/**
+ * 数据结构：
+ * hero: { id, name, role, tier, tags[], synergy[], counters[] }
+ * - synergy: 适配的 tags（比如 "poke", "protect", "engage"）
+ * - counters: 克制的 tags（比如 "immobile", "dashless", "squishy"）
+ *
+ * 你只要把 name 换成国际服英雄，role/tier/tags 适当调整即可。
+ */
+const DEFAULT_HEROES = [
+  // MARKSMAN
+  {id:"ssx", name:"Sun Shangxiang", role:"marksman", tier:5, tags:["burst","mobility","late"], synergy:["protect","peel","frontline"], counters:["squishy","immobile"]},
+  {id:"lby", name:"Lubanyu", role:"marksman", tier:4, tags:["poke","range","siege"], synergy:["protect","frontline"], counters:["immobile"]},
+  {id:"hl",  name:"Hou Yi", role:"marksman", tier:3, tags:["dps","late"], synergy:["protect","peel"], counters:["squishy"]},
+
+  // SUPPORT
+  {id:"msy", name:"Ming Shiyin", role:"support", tier:4, tags:["protect","buff","single"], synergy:["burst","late"], counters:["dive"]},
+  {id:"dy",  name:"Da Qiao", role:"support", tier:4, tags:["macro","reset","utility"], synergy:["poke","siege"], counters:["slow"]},
+  {id:"gy",  name:"Guiguzi", role:"support", tier:4, tags:["engage","pick","stealth"], synergy:["burst","follow"], counters:["immobile","squishy"]},
+  {id:"zz",  name:"Zhang Fei", role:"support", tier:4, tags:["frontline","peel","engage"], synergy:["late","dps"], counters:["dive"]},
+
+  // JUNGLE
+  {id:"lj",  name:"Luna", role:"jungle", tier:4, tags:["assassin","snowball","mobility"], synergy:["engage","pick"], counters:["squishy"]},
+  {id:"hlj", name:"Han Xin", role:"jungle", tier:4, tags:["mobility","split","snowball"], synergy:["macro","pick"], counters:["slow"]},
+  {id:"nm",  name:"Nakroth", role:"jungle", tier:4, tags:["assassin","mobility"], synergy:["pick","burst"], counters:["squishy"]},
+  {id:"dm",  name:"Dian Wei", role:"jungle", tier:3, tags:["dive","bruiser"], synergy:["protect","follow"], counters:["squishy"]},
+
+  // MID
+  {id:"gl",  name:"Gan & Mo", role:"mid", tier:4, tags:["poke","burst","siege"], synergy:["frontline","protect"], counters:["immobile","squishy"]},
+  {id:"dx",  name:"Daji", role:"mid", tier:3, tags:["burst","pick"], synergy:["engage","stealth"], counters:["squishy"]},
+  {id:"zy",  name:"Zhou Yu", role:"mid", tier:3, tags:["zone","siege"], synergy:["frontline","macro"], counters:["slow"]},
+
+  // TOP
+  {id:"lb",  name:"Lu Bu", role:"top", tier:4, tags:["bruiser","dive","sustain"], synergy:["engage","follow"], counters:["frontline"]},
+  {id:"lp",  name:"Lian Po", role:"top", tier:4, tags:["frontline","engage","cc"], synergy:["poke","burst"], counters:["immobile"]},
+  {id:"gg",  name:"Guan Yu", role:"top", tier:4, tags:["flank","macro","engage"], synergy:["poke","follow"], counters:["slow"]},
+
+  // A few more to make pool feel real
+  {id:"by", name:"Bai Qi", role:"top", tier:3, tags:["frontline","cc","pick"], synergy:["poke","burst"], counters:["immobile"]},
+  {id:"dyx", name:"Diaochan", role:"mid", tier:4, tags:["sustain","aoe","skirmish"], synergy:["frontline"], counters:["melee"]},
+  {id:"mg", name:"Mozi", role:"support", tier:3, tags:["poke","pick","siege"], synergy:["siege","burst"], counters:["immobile"]},
+  {id:"yk", name:"Ying Ke", role:"jungle", tier:3, tags:["dive","bruiser","frontline"], synergy:["protect","dps"], counters:["squishy"]},
+  {id:"hy", name:"He Yi", role:"mid", tier:3, tags:["poke","utility"], synergy:["siege","macro"], counters:["slow"]},
+  {id:"jl", name:"Jing", role:"jungle", tier:5, tags:["assassin","mobility","burst"], synergy:["pick","engage"], counters:["squishy","immobile"]},
+];
+
+const ROLES = ["top","jungle","mid","marksman","support"];
+
+let state = {
+  mode: "global", // global: 5 bans each; fast: 3 bans each
+  phase: "ban",   // ban -> pick
+  turn: "blue",   // blue / red
+  banLimit: 5,
+  pickLimit: 5,
+  blue: { bans:[], picks:[] },
+  red:  { bans:[], picks:[] },
+  heroes: JSON.parse(JSON.stringify(DEFAULT_HEROES)),
+  history: [],
+  aiLast: null
+};
+
+const el = (id)=>document.getElementById(id);
+const toast = (msg)=>{
+  const t = el("toast");
+  t.textContent = msg;
+  t.style.display="block";
+  clearTimeout(toast._tm);
+  toast._tm=setTimeout(()=>t.style.display="none",1200);
+};
+
+function setMode(mode){
+  state.mode = mode;
+  state.banLimit = (mode==="fast"?3:5);
+  // If current bans exceed new limit, trim (keeps earliest)
+  state.blue.bans = state.blue.bans.slice(0,state.banLimit);
+  state.red.bans  = state.red.bans.slice(0,state.banLimit);
+  normalizePhaseTurn();
+  render();
+}
+
+function normalizePhaseTurn(){
+  // Determine phase based on whether both sides filled bans
+  const bansDone = (state.blue.bans.length>=state.banLimit && state.red.bans.length>=state.banLimit);
+  state.phase = bansDone ? "pick" : "ban";
+
+  // Determine turn: alternate fairly based on actions count within phase
+  // Simple alternation: compare total actions
+  const totalBlue = (state.phase==="ban"? state.blue.bans.length : state.blue.picks.length);
+  const totalRed  = (state.phase==="ban"? state.red.bans.length  : state.red.picks.length);
+  state.turn = (totalBlue<=totalRed) ? "blue" : "red";
+
+  // If one side already full in current phase, give turn to other
+  if(state.phase==="ban"){
+    if(state.blue.bans.length>=state.banLimit) state.turn="red";
+    if(state.red.bans.length>=state.banLimit)  state.turn="blue";
+  }else{
+    if(state.blue.picks.length>=state.pickLimit) state.turn="red";
+    if(state.red.picks.length>=state.pickLimit)  state.turn="blue";
+  }
+}
+
+function isTaken(id){
+  return state.blue.bans.includes(id) || state.red.bans.includes(id) ||
+         state.blue.picks.includes(id)|| state.red.picks.includes(id);
+}
+
+function heroById(id){ return state.heroes.find(h=>h.id===id); }
+
+function pushHistory(){
+  state.history.push(JSON.stringify({
+    mode:state.mode, phase:state.phase, turn:state.turn,
+    banLimit:state.banLimit, pickLimit:state.pickLimit,
+    blue:state.blue, red:state.red, heroes:state.heroes, aiLast:state.aiLast
+  }));
+  if(state.history.length>80) state.history.shift();
+}
+
+function undo(){
+  const last = state.history.pop();
+  if(!last) return;
+  const snap = JSON.parse(last);
+  state = { ...snap };
+  render();
+}
+
+function resetAll(){
+  state = {
+    mode: "global",
+    phase:"ban",
+    turn:"blue",
+    banLimit:5,
+    pickLimit:5,
+    blue:{bans:[],picks:[]},
+    red:{bans:[],picks:[]},
+    heroes: JSON.parse(JSON.stringify(DEFAULT_HEROES)),
+    history:[],
+    aiLast:null
+  };
+  render();
+}
+
+function addAction(type, id){
+  if(isTaken(id)) { toast("已被 Ban/Pick"); return; }
+  normalizePhaseTurn();
+  const side = state.turn;
+
+  // Phase check
+  if(type==="ban" && state.phase!=="ban"){ toast("当前是 Pick 阶段"); return; }
+  if(type==="pick" && state.phase!=="pick"){ toast("当前是 Ban 阶段"); return; }
+
+  // Limit check
+  if(type==="ban"){
+    if(state[side].bans.length>=state.banLimit){ toast("该方 Ban 满了"); return; }
+  }else{
+    if(state[side].picks.length>=state.pickLimit){ toast("该方 Pick 满了"); return; }
+  }
+
+  pushHistory();
+  state[side][type==="ban"?"bans":"picks"].push(id);
+  state.aiLast = null;
+  normalizePhaseTurn();
+  render();
+}
+
+function removeAction(side, type, id){
+  pushHistory();
+  const arr = state[side][type];
+  const idx = arr.indexOf(id);
+  if(idx>=0) arr.splice(idx,1);
+  state.aiLast=null;
+  normalizePhaseTurn();
+  render();
+}
+
+function scoreSide(side){
+  const own = state[side].picks.map(heroById).filter(Boolean);
+  const oppSide = side==="blue"?"red":"blue";
+  const opp = state[oppSide].picks.map(heroById).filter(Boolean);
+
+  // Base: sum of tiers
+  let s = own.reduce((a,h)=>a+h.tier,0) * 10;
+
+  // Role balance: reward missing roles covered
+  const rolesHave = new Set(own.map(h=>h.role));
+  let roleScore = 0;
+  for(const r of ROLES) roleScore += rolesHave.has(r)? 8 : -6;
+  s += roleScore;
+
+  // Synergy: if hero synergy tags match teammates tags
+  const ownTags = new Set(own.flatMap(h=>h.tags));
+  let syn = 0;
+  for(const h of own){
+    for(const want of h.synergy||[]){
+      if(ownTags.has(want)) syn += 4;
+    }
+  }
+  s += syn;
+
+  // Counter: if own counters match enemy tags
+  const oppTags = new Set(opp.flatMap(h=>h.tags));
+  let ctr = 0;
+  for(const h of own){
+    for(const c of h.counters||[]){
+      if(oppTags.has(c)) ctr += 4;
+    }
+  }
+  s += ctr;
+
+  // Being countered: if enemy counters match own tags (penalty)
+  const ownTags2 = new Set(own.flatMap(h=>h.tags));
+  let pen = 0;
+  for(const h of opp){
+    for(const c of h.counters||[]){
+      if(ownTags2.has(c)) pen += 4;
+    }
+  }
+  s -= pen;
+
+  return Math.round(s);
+}
+
+function roleNeedPills(side){
+  const own = state[side].picks.map(heroById).filter(Boolean);
+  const rolesHave = new Set(own.map(h=>h.role));
+  return ROLES.map(r=>{
+    const ok = rolesHave.has(r);
+    return {role:r, ok};
+  });
+}
+
+// AI core: pick best hero for current turn, for ban or pick
+function aiSuggest(kind){ // "pick" | "ban"
+  normalizePhaseTurn();
+
+  const side = state.turn;
+  const opp = side==="blue"?"red":"blue";
+  const ownPicks = state[side].picks.map(heroById).filter(Boolean);
+  const oppPicks = state[opp].picks.map(heroById).filter(Boolean);
+
+  const ownTags = new Set(ownPicks.flatMap(h=>h.tags));
+  const oppTags = new Set(oppPicks.flatMap(h=>h.tags));
+  const ownRoles = new Set(ownPicks.map(h=>h.role));
+
+  const candidates = state.heroes.filter(h=>!isTaken(h.id));
+
+  let best = null;
+  for(const h of candidates){
+    let score = 0;
+
+    // Base tier
+    score += h.tier * 20;
+
+    // Role fill (only matters for pick)
+    if(kind==="pick"){
+      score += ownRoles.has(h.role) ? -10 : +18;
+    }
+
+    // Synergy with our team (match tags)
+    for(const need of (h.synergy||[])){
+      if(ownTags.has(need)) score += 10;
+    }
+
+    // Counter enemy (match enemy tags)
+    for(const c of (h.counters||[])){
+      if(oppTags.has(c)) score += 10;
+    }
+
+    // Avoid being countered by enemy picks (rough)
+    for(const enemy of oppPicks){
+      for(const c of (enemy.counters||[])){
+        if((h.tags||[]).includes(c)) score -= 10;
+      }
+    }
+
+    // If kind=ban: prefer removing things that threaten us
+    if(kind==="ban"){
+      // Threat = tier + counters our tags + synergy with enemy
+      let threat = h.tier * 18;
+
+      for(const c of (h.counters||[])){
+        if(ownTags.has(c)) threat += 14;
+      }
+      for(const need of (h.synergy||[])){
+        if(oppTags.has(need)) threat += 10;
+      }
+      // also ban roles we haven't covered yet? (optional small)
+      if(!ownRoles.has(h.role)) threat += 4;
+
+      score = threat; // override for ban
+    }
+
+    if(!best || score>best.score){
+      best = {hero:h, score, side, kind};
+    }
+  }
+
+  if(!best){
+    return { hero:null, why:"没有可用英雄了" };
+  }
+
+  // Build explanation
+  const h = best.hero;
+  const parts = [];
+  parts.push(`强度(Tier) ${h.tier}/5`);
+  if(kind==="pick"){
+    if(!ownRoles.has(h.role)) parts.push(`补位：缺少 ${h.role}`);
+    const synHit = (h.synergy||[]).filter(t=>ownTags.has(t));
+    if(synHit.length) parts.push(`协同：匹配队友标签 ${synHit.join(", ")}`);
+    const ctrHit = (h.counters||[]).filter(t=>oppTags.has(t));
+    if(ctrHit.length) parts.push(`克制：针对敌方标签 ${ctrHit.join(", ")}`);
+  }else{
+    const hit1 = (h.counters||[]).filter(t=>ownTags.has(t));
+    if(hit1.length) parts.push(`威胁：克制我方标签 ${hit1.join(", ")}`);
+    const hit2 = (h.synergy||[]).filter(t=>oppTags.has(t));
+    if(hit2.length) parts.push(`配合：适配敌方标签 ${hit2.join(", ")}`);
+  }
+
+  return {
+    hero:h,
+    why: parts.join(" · "),
+    kind,
+    side
+  };
+}
+
+function renderChips(containerId, arr, side, type){
+  const box = el(containerId);
+  box.innerHTML = "";
+  arr.forEach(id=>{
+    const h = heroById(id);
+    if(!h) return;
+    const chip = document.createElement("div");
+    chip.className = `chip ${type==="bans"?"ban":side}`;
+    chip.innerHTML = `<span>${h.name}</span><span class="x">✕</span>`;
+    chip.onclick = ()=> removeAction(side, type, id);
+    box.appendChild(chip);
+  });
+}
+
+function renderReq(){
+  const mk = (list, hostId)=>{
+    const host = el(hostId);
+    host.innerHTML="";
+    list.forEach(x=>{
+      const p=document.createElement("span");
+      p.className = `pill ${x.ok?"good":"bad"}`;
+      p.textContent = x.role;
+      host.appendChild(p);
+    });
+  };
+  mk(roleNeedPills("blue"), "blueReq");
+  mk(roleNeedPills("red"),  "redReq");
+}
+
+function renderHeroes(){
+  const q = el("search").value.trim().toLowerCase();
+  const grid = el("heroGrid");
+  grid.innerHTML = "";
+
+  const list = state.heroes
+    .filter(h=>{
+      const blob = (h.name+" "+h.role+" "+(h.tags||[]).join(" ")+" "+(h.synergy||[]).join(" ")+" "+(h.counters||[]).join(" ")).toLowerCase();
+      return !q || blob.includes(q);
+    })
+    .sort((a,b)=> (b.tier-a.tier) || a.role.localeCompare(b.role));
+
+  list.forEach(h=>{
+    const card=document.createElement("div");
+    card.className="hero";
+    const taken = isTaken(h.id);
+    card.style.opacity = taken ? .45 : 1;
+
+    card.innerHTML = `
+      <div class="heroTop">
+        <div class="heroName">${h.name}</div>
+        <div class="heroMeta">
+          <span class="tag tier">Tier ${h.tier}</span>
+          <span class="tag role">${h.role}</span>
+        </div>
+      </div>
+      <div class="heroMeta">
+        ${(h.tags||[]).slice(0,6).map(t=>`<span class="tag">${t}</span>`).join("")}
+      </div>
+      <div class="heroBtns">
+        <button class="btn btnBlue small" ${taken?"disabled":""}>Pick</button>
+        <button class="btn btnWarn small" ${taken?"disabled":""}>Ban</button>
+      </div>
+    `;
+
+    const btns = card.querySelectorAll("button");
+    btns[0].onclick = ()=> addAction("pick", h.id);
+    btns[1].onclick = ()=> addAction("ban", h.id);
+
+    grid.appendChild(card);
+  });
+
+  el("remainCnt").textContent = state.heroes.filter(h=>!isTaken(h.id)).length;
+}
+
+function render(){
+  // Tabs
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.classList.toggle("on", t.dataset.mode===state.mode);
+  });
+
+  el("phaseBadge").textContent = `Phase: ${state.phase.toUpperCase()}`;
+  el("turnBadge").textContent  = `Turn: ${state.turn.toUpperCase()}`;
+
+  renderChips("blueBans", state.blue.bans, "blue", "bans");
+  renderChips("redBans",  state.red.bans,  "red",  "bans");
+  renderChips("bluePicks",state.blue.picks,"blue","picks");
+  renderChips("redPicks", state.red.picks, "red", "picks");
+
+  renderReq();
+
+  // Scores
+  el("blueScore").textContent = scoreSide("blue");
+  el("redScore").textContent  = scoreSide("red");
+
+  renderHeroes();
+
+  // Update AI buttons enabled
+  const ai = state.aiLast;
+  el("btnApplyPick").disabled = !(ai && ai.hero);
+  el("btnApplyBan").disabled  = !(ai && ai.hero);
+}
+
+function exportState(){
+  const payload = {
+    version:1,
+    state:{
+      mode:state.mode, banLimit:state.banLimit, pickLimit:state.pickLimit,
+      blue:state.blue, red:state.red,
+      heroes:state.heroes
+    }
+  };
+  const txt = JSON.stringify(payload, null, 2);
+  navigator.clipboard?.writeText(txt);
+  toast("已复制导出 JSON");
+}
+
+function importState(){
+  const txt = prompt("把你保存的 JSON 粘贴进来：");
+  if(!txt) return;
+  try{
+    const obj = JSON.parse(txt);
+    if(!obj.state) throw new Error("格式不对");
+    pushHistory();
+    state.mode = obj.state.mode || "global";
+    state.banLimit = obj.state.banLimit || (state.mode==="fast"?3:5);
+    state.pickLimit = obj.state.pickLimit || 5;
+    state.blue = obj.state.blue || {bans:[],picks:[]};
+    state.red  = obj.state.red  || {bans:[],picks:[]};
+    state.heroes = obj.state.heroes || JSON.parse(JSON.stringify(DEFAULT_HEROES));
+    state.aiLast=null;
+    normalizePhaseTurn();
+    render();
+    toast("导入成功");
+  }catch(e){
+    alert("导入失败："+e.message);
+  }
+}
+
+function openDataEditor(){
+  el("dataEditor").style.display = "block";
+  el("dataText").value = JSON.stringify(state.heroes, null, 2);
+}
+function closeDataEditor(){
+  el("dataEditor").style.display = "none";
+}
+function saveDataEditor(){
+  try{
+    const arr = JSON.parse(el("dataText").value);
+    if(!Array.isArray(arr)) throw new Error("必须是数组");
+    // basic validation
+    for(const h of arr){
+      if(!h.id||!h.name||!h.role) throw new Error("每个英雄需要 id/name/role");
+      if(typeof h.tier!=="number") h.tier = 3;
+      if(!Array.isArray(h.tags)) h.tags=[];
+      if(!Array.isArray(h.synergy)) h.synergy=[];
+      if(!Array.isArray(h.counters)) h.counters=[];
+    }
+    pushHistory();
+    state.heroes = arr;
+    closeDataEditor();
+    render();
+    toast("英雄数据已保存");
+  }catch(e){
+    alert("保存失败："+e.message);
+  }
+}
+
+function applyAi(asKind){
+  const ai = state.aiLast;
+  if(!ai || !ai.hero) return;
+  // set to current phase or override?
+  if(asKind==="pick"){
+    if(state.phase!=="pick") { toast("当前不是 Pick 阶段"); return; }
+    addAction("pick", ai.hero.id);
+  }else{
+    if(state.phase!=="ban") { toast("当前不是 Ban 阶段"); return; }
+    addAction("ban", ai.hero.id);
+  }
+}
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick = ()=> setMode(t.dataset.mode);
+});
+
+el("search").addEventListener("input", renderHeroes);
+
+el("btnAi").onclick = ()=>{
+  normalizePhaseTurn();
+  const kind = state.phase; // "ban" or "pick"
+  const sug = aiSuggest(kind);
+  state.aiLast = sug;
+  if(sug.hero){
+    el("aiName").textContent = `${sug.kind.toUpperCase()} → ${sug.hero.name}`;
+    el("aiWhy").textContent  = sug.why;
+  }else{
+    el("aiName").textContent = "—";
+    el("aiWhy").textContent = sug.why || "—";
+  }
+  render();
+};
+
+el("btnApplyPick").onclick = ()=> applyAi("pick");
+el("btnApplyBan").onclick  = ()=> applyAi("ban");
+
+el("btnUndo").onclick = undo;
+el("btnReset").onclick = resetAll;
+
+el("btnExport").onclick = exportState;
+el("btnImport").onclick = importState;
+
+el("btnEditData").onclick = openDataEditor;
+el("btnCancelData").onclick = closeDataEditor;
+el("btnSaveData").onclick = saveDataEditor;
+
+// init
+normalizePhaseTurn();
+render();
+</script>
+</body>
+</html>
